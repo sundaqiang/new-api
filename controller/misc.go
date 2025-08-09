@@ -82,6 +82,8 @@ func GetStatus(c *gin.Context) {
 		"default_use_auto_group":      setting.DefaultUseAutoGroup,
 		"pay_methods":                 setting.PayMethods,
 		"usd_exchange_rate":           setting.USDExchangeRate,
+		"dingtalk_oauth":              common.DingTalkOAuthEnabled,
+		"dingtalk_client_id":          common.DingTalkClientId,
 
 		// 面板启用开关
 		"api_info_enabled":      cs.ApiInfoEnabled,

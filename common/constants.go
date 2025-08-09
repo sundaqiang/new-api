@@ -45,6 +45,7 @@ var EmailVerificationEnabled = false
 var GitHubOAuthEnabled = false
 var LinuxDOOAuthEnabled = false
 var WeChatAuthEnabled = false
+var DingTalkOAuthEnabled = false
 var TelegramOAuthEnabled = false
 var TurnstileCheckEnabled = false
 var RegisterEnabled = true
@@ -88,6 +89,9 @@ var LinuxDOMinimumTrustLevel = 0
 var WeChatServerAddress = ""
 var WeChatServerToken = ""
 var WeChatAccountQRCodeImageURL = ""
+
+var DingTalkClientId = ""
+var DingTalkClientSecret = ""
 
 var TurnstileSiteKey = ""
 var TurnstileSecretKey = ""

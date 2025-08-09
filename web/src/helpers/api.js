@@ -244,6 +244,15 @@ export async function onLinuxDOOAuthClicked(linuxdo_client_id) {
   );
 }
 
+export async function onDingTalkOAuthClicked(dingtalk_client_id) {
+  const state = await getOAuthState();
+  if (!state) return;
+  const redirect_uri = `${window.location.origin}/oauth/dingtalk`;
+  window.open(
+    `https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=${dingtalk_client_id}&response_type=code&scope=snsapi_login&state=${state}&redirect_uri=${redirect_uri}`,
+  );
+}
+
 let channelModels = undefined;
 export async function loadChannelModels() {
   const res = await API.get('/api/models');

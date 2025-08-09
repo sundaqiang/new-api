@@ -181,6 +181,14 @@ function App() {
           }
         />
         <Route
+          path='/oauth/dingtalk'
+          element={
+            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+              <OAuth2Callback type='dingtalk'></OAuth2Callback>
+            </Suspense>
+          }
+        />
+        <Route
           path='/console/setting'
           element={
             <PrivateRoute>

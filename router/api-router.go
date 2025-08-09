@@ -33,6 +33,8 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/oauth/state", middleware.CriticalRateLimit(), controller.GenerateOAuthCode)
 		apiRouter.GET("/oauth/wechat", middleware.CriticalRateLimit(), controller.WeChatAuth)
 		apiRouter.GET("/oauth/wechat/bind", middleware.CriticalRateLimit(), controller.WeChatBind)
+		apiRouter.GET("/oauth/dingtalk", middleware.CriticalRateLimit(), controller.DingTalkOAuth)
+		apiRouter.GET("/oauth/dingtalk/bind", middleware.CriticalRateLimit(), controller.DingTalkBind)
 		apiRouter.GET("/oauth/email/bind", middleware.CriticalRateLimit(), controller.EmailBind)
 		apiRouter.GET("/oauth/telegram/login", middleware.CriticalRateLimit(), controller.TelegramLogin)
 		apiRouter.GET("/oauth/telegram/bind", middleware.CriticalRateLimit(), controller.TelegramBind)
@@ -67,7 +69,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/stripe/amount", controller.RequestStripeAmount)
 				selfRoute.POST("/aff_transfer", controller.TransferAffQuota)
 				selfRoute.PUT("/setting", controller.UpdateUserSetting)
-				
+
 				// 2FA routes
 				selfRoute.GET("/2fa/status", controller.Get2FAStatus)
 				selfRoute.POST("/2fa/setup", controller.Setup2FA)
@@ -86,7 +88,7 @@ func SetApiRouter(router *gin.Engine) {
 				adminRoute.POST("/manage", controller.ManageUser)
 				adminRoute.PUT("/", controller.UpdateUser)
 				adminRoute.DELETE("/:id", controller.DeleteUser)
-				
+
 				// Admin 2FA routes
 				adminRoute.GET("/2fa/stats", controller.Admin2FAStats)
 				adminRoute.DELETE("/:id/2fa", controller.AdminDisable2FA)
@@ -200,22 +202,22 @@ func SetApiRouter(router *gin.Engine) {
 		}
 
 		vendorRoute := apiRouter.Group("/vendors")
-        vendorRoute.Use(middleware.AdminAuth())
-        {
-            vendorRoute.GET("/", controller.GetAllVendors)
-            vendorRoute.GET("/search", controller.SearchVendors)
-            vendorRoute.GET("/:id", controller.GetVendorMeta)
-            vendorRoute.POST("/", controller.CreateVendorMeta)
-            vendorRoute.PUT("/", controller.UpdateVendorMeta)
-            vendorRoute.DELETE("/:id", controller.DeleteVendorMeta)
-        }
+		vendorRoute.Use(middleware.AdminAuth())
+		{
+			vendorRoute.GET("/", controller.GetAllVendors)
+			vendorRoute.GET("/search", controller.SearchVendors)
+			vendorRoute.GET("/:id", controller.GetVendorMeta)
+			vendorRoute.POST("/", controller.CreateVendorMeta)
+			vendorRoute.PUT("/", controller.UpdateVendorMeta)
+			vendorRoute.DELETE("/:id", controller.DeleteVendorMeta)
+		}
 
-        modelsRoute := apiRouter.Group("/models")
+		modelsRoute := apiRouter.Group("/models")
 		modelsRoute.Use(middleware.AdminAuth())
 		{
 			modelsRoute.GET("/missing", controller.GetMissingModels)
-            modelsRoute.GET("/", controller.GetAllModelsMeta)
-            modelsRoute.GET("/search", controller.SearchModelsMeta)
+			modelsRoute.GET("/", controller.GetAllModelsMeta)
+			modelsRoute.GET("/search", controller.SearchModelsMeta)
 			modelsRoute.GET("/:id", controller.GetModelMeta)
 			modelsRoute.POST("/", controller.CreateModelMeta)
 			modelsRoute.PUT("/", controller.UpdateModelMeta)

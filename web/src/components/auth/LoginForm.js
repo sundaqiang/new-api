@@ -31,7 +31,8 @@ import {
   setUserData,
   onGitHubOAuthClicked,
   onOIDCClicked,
-  onLinuxDOOAuthClicked
+  onLinuxDOOAuthClicked,
+  onDingTalkOAuthClicked
 } from '../../helpers/index.js';
 import Turnstile from 'react-turnstile';
 import {
@@ -51,6 +52,7 @@ import OIDCIcon from '../common/logo/OIDCIcon.js';
 import WeChatIcon from '../common/logo/WeChatIcon.js';
 import LinuxDoIcon from '../common/logo/LinuxDoIcon.js';
 import TwoFAVerification from './TwoFAVerification.js';
+import DingTalkIcon from '../common/logo/DingTalkIcon.js';
 import { useTranslation } from 'react-i18next';
 
 const LoginForm = () => {
@@ -74,6 +76,7 @@ const LoginForm = () => {
   const [githubLoading, setGithubLoading] = useState(false);
   const [oidcLoading, setOidcLoading] = useState(false);
   const [linuxdoLoading, setLinuxdoLoading] = useState(false);
+  const [dingtalkLoading, setDingtalkLoading] = useState(false);
   const [emailLoginLoading, setEmailLoginLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
@@ -170,7 +173,7 @@ const LoginForm = () => {
             setLoginLoading(false);
             return;
           }
-          
+
           userDispatch({ type: 'login', payload: data });
           setUserData(data);
           updateAPI();
@@ -265,6 +268,17 @@ const LoginForm = () => {
     } finally {
       // 由于重定向，这里不会执行到，但为了完整性添加
       setTimeout(() => setLinuxdoLoading(false), 3000);
+    }
+  };
+
+  // 包装的钉钉登录点击处理
+  const handleDingTalkClick = () => {
+    setDingtalkLoading(true);
+    try {
+      onDingTalkOAuthClicked(status.dingtalk_client_id);
+    } finally {
+      // 由于重定向，这里不会执行到，但为了完整性添加
+      setTimeout(() => setDingtalkLoading(false), 3000);
     }
   };
 
@@ -372,6 +386,20 @@ const LoginForm = () => {
                     loading={linuxdoLoading}
                   >
                     <span className="ml-3">{t('使用 LinuxDO 继续')}</span>
+                  </Button>
+                )}
+
+                {status.dingtalk_oauth && (
+                  <Button
+                    theme='outline'
+                    className="w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors"
+                    type="tertiary"
+                    icon={<Icon svg={<DingTalkIcon />} style={{ color: '#5DADE2' }} />}
+                    size="large"
+                    onClick={handleDingTalkClick}
+                    loading={dingtalkLoading}
+                  >
+                    <span className="ml-3">{t('使用 钉钉 继续')}</span>
                   </Button>
                 )}
 
@@ -581,7 +609,7 @@ const LoginForm = () => {
         width={450}
         centered
       >
-        <TwoFAVerification 
+        <TwoFAVerification
           onSuccess={handle2FASuccess}
           onBack={handleBackToLogin}
           isModal={true}
@@ -595,8 +623,8 @@ const LoginForm = () => {
       {/* 背景模糊晕染球 */}
       <div className="blur-ball blur-ball-indigo" style={{ top: '-80px', right: '-80px', transform: 'none' }} />
       <div className="blur-ball blur-ball-teal" style={{ top: '50%', left: '-120px' }} />
-      <div className="w-full max-w-sm mt-[60px]">
-        {showEmailLogin || !(status.github_oauth || status.oidc_enabled || status.wechat_login || status.linuxdo_oauth || status.telegram_oauth)
+      <div className="w-full max-w-sm mt-[64px]">
+        {showEmailLogin || !(status.github_oauth || status.oidc_enabled || status.wechat_login || status.linuxdo_oauth || status.dingtalk_oauth || status.telegram_oauth)
           ? renderEmailLoginForm()
           : renderOAuthOptions()}
         {renderWeChatLoginModal()}
