@@ -71,6 +71,9 @@ const SystemSetting = () => {
     WeChatServerAddress: '',
     WeChatServerToken: '',
     WeChatAccountQRCodeImageURL: '',
+    DingTalkOAuthEnabled: '',
+    DingTalkClientId: '',
+    DingTalkClientSecret: '',
     TurnstileCheckEnabled: '',
     TurnstileSiteKey: '',
     TurnstileSecretKey: '',
@@ -118,6 +121,7 @@ const SystemSetting = () => {
           case 'EmailVerificationEnabled':
           case 'GitHubOAuthEnabled':
           case 'WeChatAuthEnabled':
+          case 'DingTalkOAuthEnabled':
           case 'TelegramOAuthEnabled':
           case 'RegisterEnabled':
           case 'TurnstileCheckEnabled':
@@ -485,6 +489,27 @@ const SystemSetting = () => {
     }
   };
 
+  const submitDingTalkOAuth = async () => {
+    const options = [];
+
+    if (originInputs['DingTalkClientId'] !== inputs.DingTalkClientId) {
+      options.push({ key: 'DingTalkClientId', value: inputs.DingTalkClientId });
+    }
+    if (
+      originInputs['DingTalkClientSecret'] !== inputs.DingTalkClientSecret &&
+      inputs.DingTalkClientSecret !== ''
+    ) {
+      options.push({
+        key: 'DingTalkClientSecret',
+        value: inputs.DingTalkClientSecret,
+      });
+    }
+
+    if (options.length > 0) {
+      await updateOptions(options);
+    }
+  };
+
   const handleCheckboxChange = async (optionKey, event) => {
     const value = event.target.checked;
 
@@ -659,6 +684,15 @@ const SystemSetting = () => {
                         }
                       >
                         {t('允许通过微信登录 & 注册')}
+                      </Form.Checkbox>
+                      <Form.Checkbox
+                        field='DingTalkOAuthEnabled'
+                        noLabel
+                        onChange={(e) =>
+                          handleCheckboxChange('DingTalkOAuthEnabled', e)
+                        }
+                      >
+                        {t('允许通过钉钉登录 & 注册')}
                       </Form.Checkbox>
                       <Form.Checkbox
                         field='TelegramOAuthEnabled'
@@ -981,6 +1015,38 @@ const SystemSetting = () => {
                   </Row>
                   <Button onClick={submitWeChat}>
                     {t('保存 WeChat Server 设置')}
+                  </Button>
+                </Form.Section>
+              </Card>
+
+              <Card>
+                <Form.Section text={t('配置钉钉 OAuth App')}>
+                  <Text>{t('用以支持通过钉钉进行登录注册')}</Text>
+                  <Banner
+                    type='info'
+                    description={`${t('回调 URL 填')} ${inputs.ServerAddress ? inputs.ServerAddress : t('网站地址')}/oauth/dingtalk`}
+                    style={{ marginBottom: 20, marginTop: 16 }}
+                  />
+                  <Row
+                    gutter={{ xs: 8, sm: 16, md: 24, lg: 24, xl: 24, xxl: 24 }}
+                  >
+                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                      <Form.Input
+                        field='DingTalkClientId'
+                        label={t('钉钉 Client ID')}
+                      />
+                    </Col>
+                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                      <Form.Input
+                        field='DingTalkClientSecret'
+                        label={t('钉钉 Client Secret')}
+                        type='password'
+                        placeholder={t('敏感信息不会发送到前端显示')}
+                      />
+                    </Col>
+                  </Row>
+                  <Button onClick={submitDingTalkOAuth}>
+                    {t('保存钉钉 OAuth 设置')}
                   </Button>
                 </Form.Section>
               </Card>
