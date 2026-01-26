@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"one-api/dto"
-	"one-api/relay/channel"
-	"one-api/relay/channel/openai"
-	relaycommon "one-api/relay/common"
-	"one-api/relay/constant"
-	"one-api/setting/model_setting"
-	"one-api/types"
 	"strings"
+
+	"github.com/QuantumNous/new-api/dto"
+	"github.com/QuantumNous/new-api/relay/channel"
+	"github.com/QuantumNous/new-api/relay/channel/openai"
+	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/relay/constant"
+	"github.com/QuantumNous/new-api/setting/model_setting"
+	"github.com/QuantumNous/new-api/setting/reasoning"
+	"github.com/QuantumNous/new-api/types"
 
 	"github.com/gin-gonic/gin"
 )
@@ -59,15 +61,26 @@ func (a *Adaptor) ConvertImageRequest(c *gin.Context, info *relaycommon.RelayInf
 		return nil, errors.New("not supported model for image generation")
 	}
 
-	// convert size to aspect ratio
+	// convert size to aspect ratio but allow user to specify aspect ratio
 	aspectRatio := "1:1" // default aspect ratio
-	switch request.Size {
-	case "1024x1024":
-		aspectRatio = "1:1"
-	case "1024x1792":
-		aspectRatio = "9:16"
-	case "1792x1024":
-		aspectRatio = "16:9"
+	size := strings.TrimSpace(request.Size)
+	if size != "" {
+		if strings.Contains(size, ":") {
+			aspectRatio = size
+		} else {
+			switch size {
+			case "256x256", "512x512", "1024x1024":
+				aspectRatio = "1:1"
+			case "1536x1024":
+				aspectRatio = "3:2"
+			case "1024x1536":
+				aspectRatio = "2:3"
+			case "1024x1792":
+				aspectRatio = "9:16"
+			case "1792x1024":
+				aspectRatio = "16:9"
+			}
+		}
 	}
 
 	// build gemini imagen request
@@ -78,10 +91,32 @@ func (a *Adaptor) ConvertImageRequest(c *gin.Context, info *relaycommon.RelayInf
 			},
 		},
 		Parameters: dto.GeminiImageParameters{
-			SampleCount:      request.N,
+			SampleCount:      int(request.N),
 			AspectRatio:      aspectRatio,
 			PersonGeneration: "allow_adult", // default allow adult
 		},
+	}
+
+	// Set imageSize when quality parameter is specified
+	// Map quality parameter to imageSize (only supported by Standard and Ultra models)
+	// quality values: auto, high, medium, low (for gpt-image-1), hd, standard (for dall-e-3)
+	// imageSize values: 1K (default), 2K
+	// https://ai.google.dev/gemini-api/docs/imagen
+	// https://platform.openai.com/docs/api-reference/images/create
+	if request.Quality != "" {
+		imageSize := "1K" // default
+		switch request.Quality {
+		case "hd", "high":
+			imageSize = "2K"
+		case "2K":
+			imageSize = "2K"
+		case "standard", "medium", "low", "auto", "1K":
+			imageSize = "1K"
+		default:
+			// unknown quality value, default to 1K
+			imageSize = "1K"
+		}
+		geminiRequest.Parameters.ImageSize = imageSize
 	}
 
 	return geminiRequest, nil
@@ -93,7 +128,8 @@ func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
 
 func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 
-	if model_setting.GetGeminiSettings().ThinkingAdapterEnabled {
+	if model_setting.GetGeminiSettings().ThinkingAdapterEnabled &&
+		!model_setting.ShouldPreserveThinkingSuffix(info.OriginModelName) {
 		// 新增逻辑：处理 -thinking-<budget> 格式
 		if strings.Contains(info.UpstreamModelName, "-thinking-") {
 			parts := strings.Split(info.UpstreamModelName, "-thinking-")
@@ -102,13 +138,15 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 			info.UpstreamModelName = strings.TrimSuffix(info.UpstreamModelName, "-thinking")
 		} else if strings.HasSuffix(info.UpstreamModelName, "-nothinking") {
 			info.UpstreamModelName = strings.TrimSuffix(info.UpstreamModelName, "-nothinking")
+		} else if baseModel, level, ok := reasoning.TrimEffortSuffix(info.UpstreamModelName); ok && level != "" {
+			info.UpstreamModelName = baseModel
 		}
 	}
 
 	version := model_setting.GetGeminiVersionSetting(info.UpstreamModelName)
 
 	if strings.HasPrefix(info.UpstreamModelName, "imagen") {
-		return fmt.Sprintf("%s/%s/models/%s:predict", info.BaseUrl, version, info.UpstreamModelName), nil
+		return fmt.Sprintf("%s/%s/models/%s:predict", info.ChannelBaseUrl, version, info.UpstreamModelName), nil
 	}
 
 	if strings.HasPrefix(info.UpstreamModelName, "text-embedding") ||
@@ -118,7 +156,7 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 		if info.IsGeminiBatchEmbedding {
 			action = "batchEmbedContents"
 		}
-		return fmt.Sprintf("%s/%s/models/%s:%s", info.BaseUrl, version, info.UpstreamModelName, action), nil
+		return fmt.Sprintf("%s/%s/models/%s:%s", info.ChannelBaseUrl, version, info.UpstreamModelName, action), nil
 	}
 
 	action := "generateContent"
@@ -128,7 +166,7 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 			info.DisablePing = true
 		}
 	}
-	return fmt.Sprintf("%s/%s/models/%s:%s", info.BaseUrl, version, info.UpstreamModelName, action), nil
+	return fmt.Sprintf("%s/%s/models/%s:%s", info.ChannelBaseUrl, version, info.UpstreamModelName, action), nil
 }
 
 func (a *Adaptor) SetupRequestHeader(c *gin.Context, req *http.Header, info *relaycommon.RelayInfo) error {
@@ -142,7 +180,7 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 		return nil, errors.New("request is nil")
 	}
 
-	geminiRequest, err := CovertGemini2OpenAI(*request, info)
+	geminiRequest, err := CovertOpenAI2Gemini(c, *request, info)
 	if err != nil {
 		return nil, err
 	}
@@ -208,8 +246,8 @@ func (a *Adaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, request
 
 func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (usage any, err *types.NewAPIError) {
 	if info.RelayMode == constant.RelayModeGemini {
-		if strings.HasSuffix(info.RequestURLPath, ":embedContent") ||
-			strings.HasSuffix(info.RequestURLPath, ":batchEmbedContents") {
+		if strings.Contains(info.RequestURLPath, ":embedContent") ||
+			strings.Contains(info.RequestURLPath, ":batchEmbedContents") {
 			return NativeGeminiEmbeddingHandler(c, resp, info)
 		}
 		if info.IsStream {

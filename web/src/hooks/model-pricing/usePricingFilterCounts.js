@@ -23,7 +23,7 @@ import { useMemo } from 'react';
 const normalizeTags = (tags = '') =>
   tags
     .toLowerCase()
-    .split(/[,;|\s]+/)
+    .split(/[,;|]+/)
     .map((t) => t.trim())
     .filter(Boolean);
 
@@ -51,7 +51,8 @@ export const usePricingFilterCounts = ({
   const matchesFilters = (model, ignore = []) => {
     // 分组
     if (!ignore.includes('group') && filterGroup !== 'all') {
-      if (!model.enable_groups || !model.enable_groups.includes(filterGroup)) return false;
+      if (!model.enable_groups || !model.enable_groups.includes(filterGroup))
+        return false;
     }
 
     // 计费类型
@@ -90,7 +91,8 @@ export const usePricingFilterCounts = ({
       if (
         !(
           model.model_name.toLowerCase().includes(term) ||
-          (model.description && model.description.toLowerCase().includes(term)) ||
+          (model.description &&
+            model.description.toLowerCase().includes(term)) ||
           tags.includes(term) ||
           (model.vendor_name && model.vendor_name.toLowerCase().includes(term))
         )
@@ -104,22 +106,50 @@ export const usePricingFilterCounts = ({
   // 生成不同视图所需的模型集合
   const quotaTypeModels = useMemo(
     () => allModels.filter((m) => matchesFilters(m, ['quota'])),
-    [allModels, filterGroup, filterEndpointType, filterVendor, filterTag]
+    [
+      allModels,
+      filterGroup,
+      filterEndpointType,
+      filterVendor,
+      filterTag,
+      searchValue,
+    ],
   );
 
   const endpointTypeModels = useMemo(
     () => allModels.filter((m) => matchesFilters(m, ['endpoint'])),
-    [allModels, filterGroup, filterQuotaType, filterVendor, filterTag]
+    [
+      allModels,
+      filterGroup,
+      filterQuotaType,
+      filterVendor,
+      filterTag,
+      searchValue,
+    ],
   );
 
   const vendorModels = useMemo(
     () => allModels.filter((m) => matchesFilters(m, ['vendor'])),
-    [allModels, filterGroup, filterQuotaType, filterEndpointType, filterTag]
+    [
+      allModels,
+      filterGroup,
+      filterQuotaType,
+      filterEndpointType,
+      filterTag,
+      searchValue,
+    ],
   );
 
   const tagModels = useMemo(
     () => allModels.filter((m) => matchesFilters(m, ['tag'])),
-    [allModels, filterGroup, filterQuotaType, filterEndpointType, filterVendor]
+    [
+      allModels,
+      filterGroup,
+      filterQuotaType,
+      filterEndpointType,
+      filterVendor,
+      searchValue,
+    ],
   );
 
   const groupCountModels = useMemo(
@@ -131,7 +161,7 @@ export const usePricingFilterCounts = ({
       filterVendor,
       filterTag,
       searchValue,
-    ]
+    ],
   );
 
   return {
@@ -141,4 +171,4 @@ export const usePricingFilterCounts = ({
     groupCountModels,
     tagModels,
   };
-}; 
+};

@@ -6,14 +6,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	common2 "one-api/common"
-	"one-api/relay/common"
-	"one-api/relay/constant"
-	"one-api/relay/helper"
-	"one-api/service"
-	"one-api/setting/operation_setting"
+	"strings"
 	"sync"
 	"time"
+
+	common2 "github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/logger"
+	"github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/relay/constant"
+	"github.com/QuantumNous/new-api/relay/helper"
+	"github.com/QuantumNous/new-api/service"
+	"github.com/QuantumNous/new-api/setting/operation_setting"
+	"github.com/QuantumNous/new-api/types"
 
 	"github.com/bytedance/gopkg/util/gopool"
 	"github.com/gin-gonic/gin"
@@ -34,6 +38,26 @@ func SetupApiRequestHeader(info *common.RelayInfo, c *gin.Context, req *http.Hea
 	}
 }
 
+// processHeaderOverride 处理请求头覆盖，支持变量替换
+// 支持的变量：{api_key}
+func processHeaderOverride(info *common.RelayInfo) (map[string]string, error) {
+	headerOverride := make(map[string]string)
+	for k, v := range info.HeadersOverride {
+		str, ok := v.(string)
+		if !ok {
+			return nil, types.NewError(nil, types.ErrorCodeChannelHeaderOverrideInvalid)
+		}
+
+		// 替换支持的变量
+		if strings.Contains(str, "{api_key}") {
+			str = strings.ReplaceAll(str, "{api_key}", info.ApiKey)
+		}
+
+		headerOverride[k] = str
+	}
+	return headerOverride, nil
+}
+
 func DoApiRequest(a Adaptor, c *gin.Context, info *common.RelayInfo, requestBody io.Reader) (*http.Response, error) {
 	fullRequestURL, err := a.GetRequestURL(info)
 	if err != nil {
@@ -46,9 +70,19 @@ func DoApiRequest(a Adaptor, c *gin.Context, info *common.RelayInfo, requestBody
 	if err != nil {
 		return nil, fmt.Errorf("new request failed: %w", err)
 	}
-	err = a.SetupRequestHeader(c, &req.Header, info)
+	headers := req.Header
+	err = a.SetupRequestHeader(c, &headers, info)
 	if err != nil {
 		return nil, fmt.Errorf("setup request header failed: %w", err)
+	}
+	// 在 SetupRequestHeader 之后应用 Header Override，确保用户设置优先级最高
+	// 这样可以覆盖默认的 Authorization header 设置
+	headerOverride, err := processHeaderOverride(info)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range headerOverride {
+		headers.Set(key, value)
 	}
 	resp, err := doRequest(c, req, info)
 	if err != nil {
@@ -71,10 +105,19 @@ func DoFormRequest(a Adaptor, c *gin.Context, info *common.RelayInfo, requestBod
 	}
 	// set form data
 	req.Header.Set("Content-Type", c.Request.Header.Get("Content-Type"))
-
-	err = a.SetupRequestHeader(c, &req.Header, info)
+	headers := req.Header
+	err = a.SetupRequestHeader(c, &headers, info)
 	if err != nil {
 		return nil, fmt.Errorf("setup request header failed: %w", err)
+	}
+	// 在 SetupRequestHeader 之后应用 Header Override，确保用户设置优先级最高
+	// 这样可以覆盖默认的 Authorization header 设置
+	headerOverride, err := processHeaderOverride(info)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range headerOverride {
+		headers.Set(key, value)
 	}
 	resp, err := doRequest(c, req, info)
 	if err != nil {
@@ -92,6 +135,15 @@ func DoWssRequest(a Adaptor, c *gin.Context, info *common.RelayInfo, requestBody
 	err = a.SetupRequestHeader(c, &targetHeader, info)
 	if err != nil {
 		return nil, fmt.Errorf("setup request header failed: %w", err)
+	}
+	// 在 SetupRequestHeader 之后应用 Header Override，确保用户设置优先级最高
+	// 这样可以覆盖默认的 Authorization header 设置
+	headerOverride, err := processHeaderOverride(info)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range headerOverride {
+		targetHeader.Set(key, value)
 	}
 	targetHeader.Set("Content-Type", c.Request.Header.Get("Content-Type"))
 	targetConn, _, err := websocket.DefaultDialer.Dial(fullRequestURL, targetHeader)
@@ -181,7 +233,7 @@ func sendPingData(c *gin.Context, mutex *sync.Mutex) error {
 
 		err := helper.PingData(c)
 		if err != nil {
-			common2.LogError(c, "SSE ping error: "+err.Error())
+			logger.LogError(c, "SSE ping error: "+err.Error())
 			done <- err
 			return
 		}
@@ -239,9 +291,9 @@ func doRequest(c *gin.Context, req *http.Request, info *common.RelayInfo) (*http
 	}
 
 	resp, err := client.Do(req)
-
 	if err != nil {
-		return nil, err
+		logger.LogError(c, "do request failed: "+err.Error())
+		return nil, types.NewError(err, types.ErrorCodeDoRequestFailed, types.ErrOptionWithHideErrMsg("upstream error: do request failed"))
 	}
 	if resp == nil {
 		return nil, errors.New("resp is nil")
@@ -252,7 +304,7 @@ func doRequest(c *gin.Context, req *http.Request, info *common.RelayInfo) (*http
 	return resp, nil
 }
 
-func DoTaskApiRequest(a TaskAdaptor, c *gin.Context, info *common.TaskRelayInfo, requestBody io.Reader) (*http.Response, error) {
+func DoTaskApiRequest(a TaskAdaptor, c *gin.Context, info *common.RelayInfo, requestBody io.Reader) (*http.Response, error) {
 	fullRequestURL, err := a.BuildRequestURL(info)
 	if err != nil {
 		return nil, err
@@ -269,7 +321,7 @@ func DoTaskApiRequest(a TaskAdaptor, c *gin.Context, info *common.TaskRelayInfo,
 	if err != nil {
 		return nil, fmt.Errorf("setup request header failed: %w", err)
 	}
-	resp, err := doRequest(c, req, info.RelayInfo)
+	resp, err := doRequest(c, req, info)
 	if err != nil {
 		return nil, fmt.Errorf("do request failed: %w", err)
 	}

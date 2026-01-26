@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
-	"one-api/common"
-	"one-api/model"
 	"strconv"
+	"strings"
+
+	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/model"
 
 	"github.com/gin-gonic/gin"
 )
@@ -82,6 +85,57 @@ func GetTokenStatus(c *gin.Context) {
 	})
 }
 
+func GetTokenUsage(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"message": "No Authorization header",
+		})
+		return
+	}
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"message": "Invalid Bearer token",
+		})
+		return
+	}
+	tokenKey := parts[1]
+
+	token, err := model.GetTokenByKey(strings.TrimPrefix(tokenKey, "sk-"), false)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	expiredAt := token.ExpiredTime
+	if expiredAt == -1 {
+		expiredAt = 0
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    true,
+		"message": "ok",
+		"data": gin.H{
+			"object":               "token_usage",
+			"name":                 token.Name,
+			"total_granted":        token.RemainQuota + token.UsedQuota,
+			"total_used":           token.UsedQuota,
+			"total_available":      token.RemainQuota,
+			"unlimited_quota":      token.UnlimitedQuota,
+			"model_limits":         token.GetModelLimitsMap(),
+			"model_limits_enabled": token.ModelLimitsEnabled,
+			"expires_at":           expiredAt,
+		},
+	})
+}
+
 func AddToken(c *gin.Context) {
 	token := model.Token{}
 	err := c.ShouldBindJSON(&token)
@@ -89,12 +143,30 @@ func AddToken(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	if len(token.Name) > 30 {
+	if len(token.Name) > 50 {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "令牌名称过长",
 		})
 		return
+	}
+	// 非无限额度时，检查额度值是否超出有效范围
+	if !token.UnlimitedQuota {
+		if token.RemainQuota < 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "额度值不能为负数",
+			})
+			return
+		}
+		maxQuotaValue := int((1000000000 * common.QuotaPerUnit))
+		if token.RemainQuota > maxQuotaValue {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": fmt.Sprintf("额度值超出有效范围，最大值为 %d", maxQuotaValue),
+			})
+			return
+		}
 	}
 	key, err := common.GenerateKey()
 	if err != nil {
@@ -102,7 +174,7 @@ func AddToken(c *gin.Context) {
 			"success": false,
 			"message": "生成令牌失败",
 		})
-		common.SysError("failed to generate token key: " + err.Error())
+		common.SysLog("failed to generate token key: " + err.Error())
 		return
 	}
 	cleanToken := model.Token{
@@ -118,6 +190,7 @@ func AddToken(c *gin.Context) {
 		ModelLimits:        token.ModelLimits,
 		AllowIps:           token.AllowIps,
 		Group:              token.Group,
+		CrossGroupRetry:    token.CrossGroupRetry,
 	}
 	err = cleanToken.Insert()
 	if err != nil {
@@ -155,12 +228,29 @@ func UpdateToken(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	if len(token.Name) > 30 {
+	if len(token.Name) > 50 {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "令牌名称过长",
 		})
 		return
+	}
+	if !token.UnlimitedQuota {
+		if token.RemainQuota < 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "额度值不能为负数",
+			})
+			return
+		}
+		maxQuotaValue := int((1000000000 * common.QuotaPerUnit))
+		if token.RemainQuota > maxQuotaValue {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": fmt.Sprintf("额度值超出有效范围，最大值为 %d", maxQuotaValue),
+			})
+			return
+		}
 	}
 	cleanToken, err := model.GetTokenByIds(token.Id, userId)
 	if err != nil {
@@ -195,6 +285,7 @@ func UpdateToken(c *gin.Context) {
 		cleanToken.ModelLimits = token.ModelLimits
 		cleanToken.AllowIps = token.AllowIps
 		cleanToken.Group = token.Group
+		cleanToken.CrossGroupRetry = token.CrossGroupRetry
 	}
 	err = cleanToken.Update()
 	if err != nil {
@@ -206,7 +297,6 @@ func UpdateToken(c *gin.Context) {
 		"message": "",
 		"data":    cleanToken,
 	})
-	return
 }
 
 type TokenBatch struct {

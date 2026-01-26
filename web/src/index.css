@@ -25,14 +25,15 @@ body.sidebar-collapsed {
 }
 
 body {
-  font-family: Lato, 'Helvetica Neue', Arial, Helvetica, 'Microsoft YaHei', sans-serif;
+  font-family: Lato, 'Helvetica Neue', Arial, Helvetica, 'Microsoft YaHei',
+    sans-serif;
   color: var(--semi-color-text-0);
   background-color: var(--semi-color-bg-0);
 }
 
 code {
-  font-family:
-    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
 }
 
 /* ==================== 布局相关样式 ==================== */
@@ -52,22 +53,6 @@ code {
 }
 
 /* ==================== 导航和侧边栏样式 ==================== */
-/* 导航项样式 */
-.semi-tagInput,
-.semi-input-textarea-wrapper,
-.semi-navigation-sub-title,
-.semi-chat-inputBox-sendButton,
-.semi-page-item,
-.semi-navigation-item,
-.semi-tag-closable,
-.semi-input-wrapper,
-.semi-tabs-tab-button,
-.semi-select,
-.semi-button,
-.semi-datepicker-range-input {
-  border-radius: 10px !important;
-}
-
 .semi-navigation-item {
   margin-bottom: 4px !important;
   padding: 4px 12px !important;
@@ -86,6 +71,11 @@ code {
   margin-right: 0;
 }
 
+.sidebar-nav .semi-navigation-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .semi-navigation-item,
 .semi-navigation-sub-title {
   height: 100% !important;
@@ -95,7 +85,20 @@ code {
   height: 44px !important;
 }
 
-#root>section>header>section>div>div>div>div.semi-navigation-header-list-outer>div.semi-navigation-list-wrapper>ul>div>a>li>span {
+#root
+  > section
+  > header
+  > section
+  > div
+  > div
+  > div
+  > div.semi-navigation-header-list-outer
+  > div.semi-navigation-list-wrapper
+  > ul
+  > div
+  > a
+  > li
+  > span {
   font-weight: 600 !important;
 }
 
@@ -105,6 +108,7 @@ code {
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
+  background: var(--semi-color-bg-0);
 }
 
 .sidebar-nav {
@@ -186,6 +190,7 @@ code {
   justify-content: center;
   align-items: center;
   padding: 12px;
+  margin-top: auto;
   cursor: pointer;
   background-color: var(--semi-color-bg-0);
   position: sticky;
@@ -215,6 +220,22 @@ code {
 /* 侧边栏区域容器 */
 .sidebar-section {
   padding-top: 12px;
+}
+
+@media (max-width: 767px) {
+  .sidebar-container {
+    background: var(--semi-color-bg-1);
+    border-right: 1px solid var(--semi-color-border);
+  }
+
+  .sidebar-nav {
+    background: var(--semi-color-bg-1);
+  }
+
+  .sidebar-collapse-button {
+    background-color: var(--semi-color-bg-1);
+    box-shadow: 0 -10px 10px -5px var(--semi-color-bg-1);
+  }
 }
 
 /* ==================== 聊天界面样式 ==================== */
@@ -289,6 +310,27 @@ code {
 }
 
 /* ==================== 组件特定样式 ==================== */
+/* SelectableButtonGroup */
+.sbg-button .semi-button-content {
+  min-width: 0 !important;
+}
+
+.sbg-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.sbg-ellipsis {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 /* Tabs组件样式 */
 .semi-tabs-content {
   padding: 0 !important;
@@ -301,7 +343,7 @@ code {
   overflow: hidden !important;
 }
 
-.semi-tabs-content .semi-tabs-pane>div {
+.semi-tabs-content .semi-tabs-pane > div {
   height: 100% !important;
 }
 
@@ -354,6 +396,21 @@ code {
 }
 
 /* ==================== 滚动条样式统一管理 ==================== */
+/* 通用隐藏滚动条工具类 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  /* Chrome, Safari, Opera */
+}
+
 /* 表格滚动条样式 */
 .semi-table-body::-webkit-scrollbar {
   width: 6px;
@@ -515,7 +572,14 @@ code {
 }
 
 .shine-text {
-  background: linear-gradient(90deg, currentColor 0%, currentColor 40%, rgba(255, 255, 255, 0.9) 50%, currentColor 60%, currentColor 100%);
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    currentColor 40%,
+    rgba(255, 255, 255, 0.9) 50%,
+    currentColor 60%,
+    currentColor 100%
+  );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -524,7 +588,14 @@ code {
 }
 
 .dark .shine-text {
-  background: linear-gradient(90deg, currentColor 0%, currentColor 40%, #facc15 50%, currentColor 60%, currentColor 100%);
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    currentColor 40%,
+    #facc15 50%,
+    currentColor 60%,
+    currentColor 100%
+  );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -617,8 +688,11 @@ html:not(.dark) .blur-ball-teal {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background:
-    radial-gradient(circle at -5% -10%, var(--pb1) 0%, transparent 60%),
+  background: radial-gradient(
+      circle at -5% -10%,
+      var(--pb1) 0%,
+      transparent 60%
+    ),
     radial-gradient(circle at 105% -10%, var(--pb2) 0%, transparent 55%),
     radial-gradient(circle at 5% 110%, var(--pb3) 0%, transparent 55%),
     radial-gradient(circle at 105% 110%, var(--pb4) 0%, transparent 50%);
@@ -658,13 +732,23 @@ html.dark .with-pastel-balls::before {
 .table-scroll-card .semi-card-body {
   flex: 1 1 auto;
   overflow-y: auto;
-
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 .table-scroll-card .semi-card-body::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+}
+
+.table-scroll-card .semi-card-body::-webkit-scrollbar-thumb {
+  background: rgba(var(--semi-grey-2), 0.3);
+  border-radius: 2px;
+}
+
+.table-scroll-card .semi-card-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--semi-grey-2), 0.5);
+}
+
+.table-scroll-card .semi-card-body::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 @media (max-width: 767px) {
@@ -682,11 +766,11 @@ html.dark .with-pastel-balls::before {
 }
 
 .pricing-sidebar {
-  min-width: 460px;
-  max-width: 460px;
+  width: clamp(280px, 24vw, 520px) !important;
+  min-width: clamp(280px, 24vw, 520px) !important;
+  max-width: clamp(280px, 24vw, 520px) !important;
   height: calc(100vh - 60px);
   background-color: var(--semi-color-bg-0);
-  border-right: 1px solid var(--semi-color-border);
   overflow: auto;
 }
 
@@ -709,8 +793,7 @@ html.dark .with-pastel-balls::before {
 }
 
 .pricing-search-header {
-  padding: 1rem;
-  border-bottom: 1px solid var(--semi-color-border);
+  padding: 0.5rem;
   background-color: var(--semi-color-bg-0);
   flex-shrink: 0;
   position: sticky;
@@ -727,4 +810,27 @@ html.dark .with-pastel-balls::before {
   flex: 1;
   overflow: auto;
   min-height: 0;
+}
+
+/* ==================== semi-ui 组件自定义样式 ==================== */
+.semi-card-header,
+.semi-card-body {
+  padding: 10px !important;
+}
+
+/* ==================== 自定义圆角样式 ==================== */
+.semi-radio,
+.semi-tagInput,
+.semi-input-textarea-wrapper,
+.semi-navigation-sub-title,
+.semi-chat-inputBox-sendButton,
+.semi-page-item,
+.semi-navigation-item,
+.semi-tag-closable,
+.semi-input-wrapper,
+.semi-tabs-tab-button,
+.semi-select,
+.semi-button,
+.semi-datepicker-range-input {
+  border-radius: 10px !important;
 }

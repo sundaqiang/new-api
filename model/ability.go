@@ -3,9 +3,10 @@ package model
 import (
 	"errors"
 	"fmt"
-	"one-api/common"
 	"strings"
 	"sync"
+
+	"github.com/QuantumNous/new-api/common"
 
 	"github.com/samber/lo"
 	"gorm.io/gorm"
@@ -102,7 +103,7 @@ func getChannelQuery(group string, model string, retry int) (*gorm.DB, error) {
 	return channelQuery, nil
 }
 
-func GetRandomSatisfiedChannel(group string, model string, retry int) (*Channel, error) {
+func GetChannel(group string, model string, retry int) (*Channel, error) {
 	var abilities []Ability
 
 	var err error = nil
@@ -294,13 +295,13 @@ func FixAbility() (int, int, error) {
 	if common.UsingSQLite {
 		err := DB.Exec("DELETE FROM abilities").Error
 		if err != nil {
-			common.SysError(fmt.Sprintf("Delete abilities failed: %s", err.Error()))
+			common.SysLog(fmt.Sprintf("Delete abilities failed: %s", err.Error()))
 			return 0, 0, err
 		}
 	} else {
 		err := DB.Exec("TRUNCATE TABLE abilities").Error
 		if err != nil {
-			common.SysError(fmt.Sprintf("Truncate abilities failed: %s", err.Error()))
+			common.SysLog(fmt.Sprintf("Truncate abilities failed: %s", err.Error()))
 			return 0, 0, err
 		}
 	}
@@ -320,7 +321,7 @@ func FixAbility() (int, int, error) {
 		// Delete all abilities of this channel
 		err = DB.Where("channel_id IN ?", ids).Delete(&Ability{}).Error
 		if err != nil {
-			common.SysError(fmt.Sprintf("Delete abilities failed: %s", err.Error()))
+			common.SysLog(fmt.Sprintf("Delete abilities failed: %s", err.Error()))
 			failCount += len(chunk)
 			continue
 		}
@@ -328,7 +329,7 @@ func FixAbility() (int, int, error) {
 		for _, channel := range chunk {
 			err = channel.AddAbilities(nil)
 			if err != nil {
-				common.SysError(fmt.Sprintf("Add abilities for channel %d failed: %s", channel.Id, err.Error()))
+				common.SysLog(fmt.Sprintf("Add abilities for channel %d failed: %s", channel.Id, err.Error()))
 				failCount++
 			} else {
 				successCount++

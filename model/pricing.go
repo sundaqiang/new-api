@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"one-api/common"
-	"one-api/constant"
-	"one-api/setting/ratio_setting"
-	"one-api/types"
 	"sync"
 	"time"
+
+	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
+	"github.com/QuantumNous/new-api/types"
 )
 
 type Pricing struct {
@@ -92,7 +93,7 @@ func updatePricing() {
 	//modelRatios := common.GetModelRatios()
 	enableAbilities, err := GetAllEnableAbilityWithChannels()
 	if err != nil {
-		common.SysError(fmt.Sprintf("GetAllEnableAbilityWithChannels error: %v", err))
+		common.SysLog(fmt.Sprintf("GetAllEnableAbilityWithChannels error: %v", err))
 		return
 	}
 	// 预加载模型元数据与供应商一次，避免循环查询
@@ -155,9 +156,12 @@ func updatePricing() {
 		vendorMap[vendors[i].Id] = &vendors[i]
 	}
 
+	// 初始化默认供应商映射
+	initDefaultVendorMapping(metaMap, vendorMap, enableAbilities)
+
 	// 构建对前端友好的供应商列表
-	vendorsList = make([]PricingVendor, 0, len(vendors))
-	for _, v := range vendors {
+	vendorsList = make([]PricingVendor, 0, len(vendorMap))
+	for _, v := range vendorMap {
 		vendorsList = append(vendorsList, PricingVendor{
 			ID:          v.Id,
 			Name:        v.Name,

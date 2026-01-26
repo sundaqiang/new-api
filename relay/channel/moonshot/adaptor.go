@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"one-api/dto"
-	"one-api/relay/channel"
-	"one-api/relay/channel/claude"
-	"one-api/relay/channel/openai"
-	relaycommon "one-api/relay/common"
-	"one-api/relay/constant"
-	"one-api/types"
+
+	channelconstant "github.com/QuantumNous/new-api/constant"
+	"github.com/QuantumNous/new-api/dto"
+	"github.com/QuantumNous/new-api/relay/channel"
+	"github.com/QuantumNous/new-api/relay/channel/claude"
+	"github.com/QuantumNous/new-api/relay/channel/openai"
+	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/relay/constant"
+	"github.com/QuantumNous/new-api/types"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +27,7 @@ func (a *Adaptor) ConvertGeminiRequest(*gin.Context, *relaycommon.RelayInfo, *dt
 }
 
 func (a *Adaptor) ConvertClaudeRequest(c *gin.Context, info *relaycommon.RelayInfo, req *dto.ClaudeRequest) (any, error) {
-	adaptor := openai.Adaptor{}
+	adaptor := claude.Adaptor{}
 	return adaptor.ConvertClaudeRequest(c, info, req)
 }
 
@@ -43,20 +45,30 @@ func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
 }
 
 func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
+	baseURL := info.ChannelBaseUrl
+	if specialPlan, ok := channelconstant.ChannelSpecialBases[baseURL]; ok {
+		if info.RelayFormat == types.RelayFormatClaude {
+			return fmt.Sprintf("%s/v1/messages", specialPlan.ClaudeBaseURL), nil
+		}
+		if info.RelayFormat == types.RelayFormatOpenAI {
+			return fmt.Sprintf("%s/chat/completions", specialPlan.OpenAIBaseURL), nil
+		}
+	}
+
 	switch info.RelayFormat {
-	case relaycommon.RelayFormatClaude:
-		return fmt.Sprintf("%s/anthropic/v1/messages", info.BaseUrl), nil
+	case types.RelayFormatClaude:
+		return fmt.Sprintf("%s/anthropic/v1/messages", info.ChannelBaseUrl), nil
 	default:
 		if info.RelayMode == constant.RelayModeRerank {
-			return fmt.Sprintf("%s/v1/rerank", info.BaseUrl), nil
+			return fmt.Sprintf("%s/v1/rerank", info.ChannelBaseUrl), nil
 		} else if info.RelayMode == constant.RelayModeEmbeddings {
-			return fmt.Sprintf("%s/v1/embeddings", info.BaseUrl), nil
+			return fmt.Sprintf("%s/v1/embeddings", info.ChannelBaseUrl), nil
 		} else if info.RelayMode == constant.RelayModeChatCompletions {
-			return fmt.Sprintf("%s/v1/chat/completions", info.BaseUrl), nil
+			return fmt.Sprintf("%s/v1/chat/completions", info.ChannelBaseUrl), nil
 		} else if info.RelayMode == constant.RelayModeCompletions {
-			return fmt.Sprintf("%s/v1/completions", info.BaseUrl), nil
+			return fmt.Sprintf("%s/v1/completions", info.ChannelBaseUrl), nil
 		}
-		return fmt.Sprintf("%s/v1/chat/completions", info.BaseUrl), nil
+		return fmt.Sprintf("%s/v1/chat/completions", info.ChannelBaseUrl), nil
 	}
 }
 
@@ -89,17 +101,16 @@ func (a *Adaptor) ConvertEmbeddingRequest(c *gin.Context, info *relaycommon.Rela
 
 func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (usage any, err *types.NewAPIError) {
 	switch info.RelayFormat {
-	case relaycommon.RelayFormatOpenAI:
+	case types.RelayFormatClaude:
+		if info.IsStream {
+			return claude.ClaudeStreamHandler(c, resp, info, claude.RequestModeMessage)
+		} else {
+			return claude.ClaudeHandler(c, resp, info, claude.RequestModeMessage)
+		}
+	default:
 		adaptor := openai.Adaptor{}
 		return adaptor.DoResponse(c, resp, info)
-	case relaycommon.RelayFormatClaude:
-		if info.IsStream {
-			err, usage = claude.ClaudeStreamHandler(c, resp, info, claude.RequestModeMessage)
-		} else {
-			err, usage = claude.ClaudeHandler(c, resp, info, claude.RequestModeMessage)
-		}
 	}
-	return
 }
 
 func (a *Adaptor) GetModelList() []string {

@@ -1,8 +1,9 @@
 package zhipu_4v
 
 import (
-	"one-api/dto"
 	"strings"
+
+	"github.com/QuantumNous/new-api/dto"
 )
 
 func requestOpenAI2Zhipu(request dto.GeneralOpenAIRequest) *dto.GeneralOpenAIRequest {
@@ -50,5 +51,6 @@ func requestOpenAI2Zhipu(request dto.GeneralOpenAIRequest) *dto.GeneralOpenAIReq
 		Stop:        Stop,
 		Tools:       request.Tools,
 		ToolChoice:  request.ToolChoice,
+		THINKING:    request.THINKING,
 	}
 }
