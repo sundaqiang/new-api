@@ -3,7 +3,7 @@ package controller
 import (
 	"net/http"
 
-	"github.com/QuantumNous/new-api/setting/ratio_setting"
+	"github.com/sundaqiang/new-api/setting/ratio_setting"
 
 	"github.com/gin-gonic/gin"
 )

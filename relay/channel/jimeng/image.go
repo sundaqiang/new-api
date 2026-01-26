@@ -6,10 +6,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/QuantumNous/new-api/dto"
-	relaycommon "github.com/QuantumNous/new-api/relay/common"
-	"github.com/QuantumNous/new-api/service"
-	"github.com/QuantumNous/new-api/types"
+	"github.com/sundaqiang/new-api/dto"
+	relaycommon "github.com/sundaqiang/new-api/relay/common"
+	"github.com/sundaqiang/new-api/service"
+	"github.com/sundaqiang/new-api/types"
 
 	"github.com/gin-gonic/gin"
 )

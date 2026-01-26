@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/QuantumNous/new-api/common"
-	"github.com/QuantumNous/new-api/constant"
-	"github.com/QuantumNous/new-api/dto"
-	relayconstant "github.com/QuantumNous/new-api/relay/constant"
-	"github.com/QuantumNous/new-api/setting"
+	"github.com/sundaqiang/new-api/common"
+	"github.com/sundaqiang/new-api/constant"
+	"github.com/sundaqiang/new-api/dto"
+	relayconstant "github.com/sundaqiang/new-api/relay/constant"
+	"github.com/sundaqiang/new-api/setting"
 
 	"github.com/gin-gonic/gin"
 )

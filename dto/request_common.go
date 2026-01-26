@@ -1,8 +1,8 @@
 package dto
 
 import (
-	"github.com/QuantumNous/new-api/types"
 	"github.com/gin-gonic/gin"
+	"github.com/sundaqiang/new-api/types"
 )
 
 type Request interface {

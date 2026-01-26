@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/QuantumNous/new-api/common"
+	"github.com/sundaqiang/new-api/common"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/QuantumNous/new-api/common"
 	"github.com/bytedance/gopkg/util/gopool"
+	"github.com/sundaqiang/new-api/common"
 	"gorm.io/gorm"
 )
 

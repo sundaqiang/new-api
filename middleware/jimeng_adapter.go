@@ -6,10 +6,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/QuantumNous/new-api/common"
-	"github.com/QuantumNous/new-api/constant"
-	relayconstant "github.com/QuantumNous/new-api/relay/constant"
 	"github.com/gin-gonic/gin"
+	"github.com/sundaqiang/new-api/common"
+	"github.com/sundaqiang/new-api/constant"
+	relayconstant "github.com/sundaqiang/new-api/relay/constant"
 )
 
 func JimengRequestConvert() func(c *gin.Context) {

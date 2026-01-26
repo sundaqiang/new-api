@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/QuantumNous/new-api/common"
-	"github.com/QuantumNous/new-api/constant"
-	"github.com/QuantumNous/new-api/dto"
-	"github.com/QuantumNous/new-api/model"
-	"github.com/QuantumNous/new-api/setting/operation_setting"
-	"github.com/QuantumNous/new-api/types"
+	"github.com/sundaqiang/new-api/common"
+	"github.com/sundaqiang/new-api/constant"
+	"github.com/sundaqiang/new-api/dto"
+	"github.com/sundaqiang/new-api/model"
+	"github.com/sundaqiang/new-api/setting/operation_setting"
+	"github.com/sundaqiang/new-api/types"
 )
 
 func formatNotifyType(channelId int, status int) string {

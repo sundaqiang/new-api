@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/QuantumNous/new-api/common"
+	"github.com/sundaqiang/new-api/common"
 )
 
 var defaultCacheRatio = map[string]float64{

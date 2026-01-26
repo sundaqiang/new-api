@@ -1,6 +1,6 @@
 package dify
 
-import "github.com/QuantumNous/new-api/dto"
+import "github.com/sundaqiang/new-api/dto"
 
 type DifyChatRequest struct {
 	Inputs           map[string]interface{} `json:"inputs"`

@@ -3,8 +3,8 @@ package middleware
 import (
 	"fmt"
 
-	"github.com/QuantumNous/new-api/common"
 	"github.com/gin-gonic/gin"
+	"github.com/sundaqiang/new-api/common"
 )
 
 func SetUpLogger(server *gin.Engine) {

@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"one-api/common"
-	"one-api/constant"
-	"one-api/middleware"
-	"one-api/model"
-	"one-api/setting"
-	"one-api/setting/console_setting"
-	"one-api/setting/operation_setting"
-	"one-api/setting/system_setting"
 	"strings"
+
+	"github.com/sundaqiang/new-api/common"
+	"github.com/sundaqiang/new-api/constant"
+	"github.com/sundaqiang/new-api/middleware"
+	"github.com/sundaqiang/new-api/model"
+	"github.com/sundaqiang/new-api/setting"
+	"github.com/sundaqiang/new-api/setting/console_setting"
+	"github.com/sundaqiang/new-api/setting/operation_setting"
+	"github.com/sundaqiang/new-api/setting/system_setting"
 
 	"github.com/gin-gonic/gin"
 )
@@ -69,22 +70,6 @@ func GetStatus(c *gin.Context) {
 		"top_up_link":                 common.TopUpLink,
 		"docs_link":                   operation_setting.GetGeneralSetting().DocsLink,
 		"quota_per_unit":              common.QuotaPerUnit,
-		"display_in_currency":         common.DisplayInCurrencyEnabled,
-		"enable_batch_update":         common.BatchUpdateEnabled,
-		"enable_drawing":              common.DrawingEnabled,
-		"enable_task":                 common.TaskEnabled,
-		"enable_data_export":          common.DataExportEnabled,
-		"data_export_default_time":    common.DataExportDefaultTime,
-		"default_collapse_sidebar":    common.DefaultCollapseSidebar,
-		"enable_online_topup":         setting.PayAddress != "" && setting.EpayId != "" && setting.EpayKey != "",
-		"enable_stripe_topup":         setting.StripeApiSecret != "" && setting.StripeWebhookSecret != "" && setting.StripePriceId != "",
-		"mj_notify_enabled":           setting.MjNotifyEnabled,
-		"chats":                       setting.Chats,
-		"demo_site_enabled":           operation_setting.DemoSiteEnabled,
-		"self_use_mode_enabled":       operation_setting.SelfUseModeEnabled,
-		"default_use_auto_group":      setting.DefaultUseAutoGroup,
-		"pay_methods":                 setting.PayMethods,
-		"usd_exchange_rate":           setting.USDExchangeRate,
 		"dingtalk_oauth":              common.DingTalkOAuthEnabled,
 		"dingtalk_client_id":          common.DingTalkClientId,
 		// 兼容旧前端：保留 display_in_currency，同时提供新的 quota_display_type

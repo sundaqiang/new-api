@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"github.com/QuantumNous/new-api/model"
-	"github.com/QuantumNous/new-api/service"
-	"github.com/QuantumNous/new-api/setting/ratio_setting"
+	"github.com/sundaqiang/new-api/model"
+	"github.com/sundaqiang/new-api/service"
+	"github.com/sundaqiang/new-api/setting/ratio_setting"
 
 	"github.com/gin-gonic/gin"
 )

@@ -5,9 +5,9 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/QuantumNous/new-api/common"
-	"github.com/QuantumNous/new-api/setting/config"
-	"github.com/QuantumNous/new-api/types"
+	"github.com/sundaqiang/new-api/common"
+	"github.com/sundaqiang/new-api/setting/config"
+	"github.com/sundaqiang/new-api/types"
 )
 
 var groupRatio = map[string]float64{

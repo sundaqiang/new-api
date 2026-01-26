@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"github.com/QuantumNous/new-api/common"
-	"github.com/QuantumNous/new-api/model"
-	"github.com/QuantumNous/new-api/setting/operation_setting"
-	"github.com/QuantumNous/new-api/types"
 	"github.com/gin-gonic/gin"
+	"github.com/sundaqiang/new-api/common"
+	"github.com/sundaqiang/new-api/model"
+	"github.com/sundaqiang/new-api/setting/operation_setting"
+	"github.com/sundaqiang/new-api/types"
 )
 
 func GetSubscription(c *gin.Context) {
